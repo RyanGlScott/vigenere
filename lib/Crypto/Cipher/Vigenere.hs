@@ -16,11 +16,13 @@ module Crypto.Cipher.Vigenere (
     , Ciphertext
     , encrypt
     , decrypt
+    , keyFrom
     ) where
 
 import           Data.Char (chr, ord)
+import           Data.Int (Int64)
 import           Data.Text.Lazy (Text)
-import qualified Data.Text.Lazy as TL (append, filter, null, toUpper, zipWith)
+import qualified Data.Text.Lazy as TL (append, filter, null, take, toUpper, zipWith)
 
 -- | A human-readable message.
 type Plaintext  = Text
@@ -45,6 +47,14 @@ decrypt :: Key -> Ciphertext -> Plaintext
 decrypt k c = crypt (-) k c
 {-# INLINE decrypt #-}
 
+-- | Determines the 'Key' that would encrypt the 'Plaintext' argument into the
+-- 'Ciphertext' argument with a Vigenère cipher.
+keyFrom :: Plaintext -> Ciphertext -> Int64 -> Key
+keyFrom ptxt ctxt len = TL.zipWith shiftDiff
+                                   (TL.take len (sanitize ptxt))
+                                   (TL.take len (sanitize ctxt))
+{-# INLINE keyFrom #-}
+
 -- | Transform a 'Text' using the given 'Key' and a function that combines the
 -- integer representations of two letters in the English alphabet.
 crypt :: (Int -> Int -> Int) -> Key -> Text -> Text
@@ -68,7 +78,7 @@ cycleText t | TL.null t = error "empty text"
 -- representation of a key's 'Char'. The shifting is performed by the higher-
 -- order function argument.
 shift :: (Int -> Int -> Int) -> Char -> Char -> Char
-shift f delta letter = chr $ ((f (ord letter - ord 'A') (convert delta)) `mod` range) + ord 'A'
+shift f delta letter = chr $ ((f (ord letter - ord 'A') (fromTableau delta)) `mod` range) + ord 'A'
 {-# INLINE shift #-}
 
 -- | The modulus for the 'shift' operation, or, the number of letters in the 
@@ -77,7 +87,12 @@ range :: Int
 range = 26
 {-# INLINE range #-}
 
+-- The 'Char' that would shift @c1@ to @c2@ in a Vigenère cipher.
+shiftDiff :: Char -> Char -> Char
+shiftDiff c1 c2 = chr $ ((ord c2 - ord c1 - 1) `mod` range) + ord 'A'
+{-# INLINE shiftDiff #-}
+
 -- | Determines the Vigenère cipher representation of a 'Char'.
-convert :: Char -> Int
-convert c = ord c - ord 'A' + 1 `mod` range
-{-# INLINE convert #-}
+fromTableau :: Char -> Int
+fromTableau c = ord c - ord 'A' + 1 `mod` range
+{-# INLINE fromTableau #-}
