@@ -15,13 +15,13 @@ module Main (main) where
 
 import           Crypto.Cipher.Vigenere (encrypt, decrypt)
 
-import qualified Data.Text.Lazy    as TL (pack)
+import           Data.Text.Lazy (pack)
 import qualified Data.Text.Lazy.IO as TL (putStrLn)
 
 import           System.Environment (getArgs)
 
 main :: IO ()
 main = getArgs >>= \args -> TL.putStrLn $ case args of
-    "encrypt":m:k:_ -> encrypt (TL.pack k) (TL.pack m)
-    "decrypt":c:k:_ -> decrypt (TL.pack k) (TL.pack c)
+    "encrypt":m:k:_ -> encrypt (pack k) (pack m)
+    "decrypt":c:k:_ -> decrypt (pack k) (pack c)
     _               -> "usage: ./toy {encrypt, decrypt} <text> <key>"
