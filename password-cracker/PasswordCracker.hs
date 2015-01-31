@@ -50,6 +50,7 @@ main = getArgs >>= \args -> case args of
             dict' :: Dictionary
             dict' = HS.filter ((== fwl') . TL.length) dict
             
+            -- Determine if the keyspace or dictionary-space is smaller
             naive :: Bool
             naive = 26^kl' < size dict'
             
@@ -62,6 +63,7 @@ main = getArgs >>= \args -> case args of
             TL.putStrLn $ "Key: " <> key <> ", plaintext: " <> ptxt
     _ -> putStrLn "usage: ./password-cracker <ciphertext> <keyLength> <firstWordLength>"
 
+-- | The brute-force algorithm, in which every possible key is considered.
 crackPasswordNaive :: PasswordCracker
 crackPasswordNaive ctxt kl fwl dict = do
     key <- lowercaseCombos kl
@@ -69,11 +71,15 @@ crackPasswordNaive ctxt kl fwl dict = do
     guard $ TL.take fwl ptxt `member` dict
     return (key, ptxt)
 
+-- | A modified algorithm in which every dictionary word of the given length is
+-- considered, using the word and the ciphertext to reverse-engineer a key.
 crackPasswordClever :: PasswordCracker
 crackPasswordClever ctxt kl fwl dict = do
     pDictWord <- toList dict
     let key       = keyFrom pDictWord ctxt kl
-        cDictWord = encrypt key pDictWord
+        cDictWord = encrypt key pDictWord -- A partially encrypted ciphertext, used as a litmus test
+    -- Since the Vigenère cipher cycles after the length of the key, we need only
+    -- test the ciphertext up to the length of the key
     guard $ cDictWord == (TL.take fwl ctxt)
     return (key, decrypt key ctxt)
 
@@ -83,6 +89,8 @@ dictionary = do
     dict <- readFile $ dir ++ "/dict/dict.txt"
     return . fromList . map pack $ splitLines dict
 
+-- | Breaks a string on newlines (including Windows-style \r\n newlines, which are
+-- annoyingly common).
 splitLines :: String -> [String]
 splitLines [] = []
 splitLines cs =
@@ -96,6 +104,7 @@ splitLines cs =
 isLineTerminator :: Char -> Bool
 isLineTerminator c = c == '\r' || c == '\n'
 
+-- | Generates all possible keys of a given length.
 lowercaseCombos :: Int64 -> [Text]
 lowercaseCombos = combos empty
   where
