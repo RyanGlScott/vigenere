@@ -35,11 +35,13 @@ executable vigenere-toy
   default-language:    Haskell2010
   ghc-options:         -Wall
 
--- executable vigenere-password-cracker
---   main-is:             PasswordCracker.hs
---   other-modules:       Paths_vigenere
---   build-depends:       base >= 3
---                      , vigenere >= 0.3
---   hs-source-dirs:      password-cracker
---   default-language:    Haskell2010
---   ghc-options:         -Wall
+executable vigenere-password-cracker
+  main-is:             PasswordCracker.hs
+  other-modules:       Paths_vigenere
+  build-depends:       base                 >= 3
+                     , text     >= 0.11.3.1
+                     , unordered-containers >= 0.2
+                     , vigenere             >= 0.1
+  hs-source-dirs:      password-cracker
+  default-language:    Haskell2010
+  ghc-options:         -Wall

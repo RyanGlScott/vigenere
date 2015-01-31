@@ -24,4 +24,4 @@ main :: IO ()
 main = getArgs >>= \args -> TL.putStrLn $ case args of
     "encrypt":m:k:_ -> encrypt (TL.pack k) (TL.pack m)
     "decrypt":c:k:_ -> decrypt (TL.pack k) (TL.pack c)
-    _               -> "usage: {encrypt, decrypt} <text> <key>"
+    _               -> "usage: ./toy {encrypt, decrypt} <text> <key>"
